@@ -1420,15 +1420,21 @@ body.light-mode .hc-num { color: var(--t1); }
 <!-- VLibras para tradução em Libras -->
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-  // Inicializa o widget (sem botão flutuante padrão)
-  new window.VLibras.Widget('https://vlibras.gov.br/app');
+  let vlibrasInstance = null;
+
+  // Inicializa o widget após o carregamento completo da página
+  window.addEventListener('load', function() {
+    vlibrasInstance = new window.VLibras.Widget('https://vlibras.gov.br/app');
+  });
+
   function openVLibras() {
-    if (window.VLibras && window.VLibras.Widget) {
-      window.VLibras.Widget.show();
+    if (vlibrasInstance && typeof vlibrasInstance.show === 'function') {
+      vlibrasInstance.show();  // Abre o tradutor
     } else {
-      alert('A carregar o tradutor VLibras... Tente novamente.');
+      alert('A carregar o tradutor VLibras... Tente novamente em instantes.');
     }
   }
+</script>
 </script>
 
 <script>
