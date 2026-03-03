@@ -1436,43 +1436,81 @@ div[vw-access-button] {
 <link rel="stylesheet" href="https://vlibras.gov.br/app/vlibras-plugin.css">
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-  (function () {
-    // Inicializa o widget correctamente
-    new window.VLibras.Widget('https://vlibras.gov.br/app');
+(function () {
+  var widgetPronto = false;
 
-    // Esconde o botão flutuante após render (sem display:none para manter clicável)
-    function hideBtn() {
-      var btn = document.querySelector('div[vw-access-button]');
-      if (!btn) { setTimeout(hideBtn, 300); return; }
-      btn.style.position  = 'fixed';
-      btn.style.left      = '-9999px';
-      btn.style.top       = '-9999px';
-      btn.style.visibility = 'hidden';
-      btn.style.pointerEvents = 'none';
-    }
-    window.addEventListener('load', hideBtn);
+  // Inicializa e marca como pronto quando terminar
+  window.addEventListener('load', function () {
+    try {
+      new window.VLibras.Widget('https://vlibras.gov.br/app');
+    } catch (e) {}
 
-    // Função chamada pelos nossos botões de acessibilidade
-    window.abrirVLibras = function () {
+    // Aguarda o botão aparecer no DOM para confirmar que está pronto
+    var tentativas = 0;
+    var esperar = setInterval(function () {
       var btn = document.querySelector('div[vw-access-button]');
-      if (!btn) {
-        alert('O tradutor ainda está a carregar. Aguarde um momento e tente novamente.');
-        return;
-      }
-      // Torna temporariamente clicável, clica, e volta a esconder
-      btn.style.visibility   = 'visible';
-      btn.style.pointerEvents = 'auto';
-      btn.style.left = '-9999px'; // continua fora do ecrã visual
-      btn.click();
-      // Volta a desactivar pointer events após o clique
-      setTimeout(function () {
-        btn.style.visibility    = 'hidden';
+      tentativas++;
+      if (btn) {
+        widgetPronto = true;
+        // Esconder o botão original
+        btn.style.position     = 'fixed';
+        btn.style.left         = '-9999px';
+        btn.style.top          = '-9999px';
+        btn.style.visibility   = 'hidden';
         btn.style.pointerEvents = 'none';
-      }, 100);
-    };
-  })();
-</script>
+        clearInterval(esperar);
+      }
+      // Desiste após 15 segundos
+      if (tentativas > 50) clearInterval(esperar);
+    }, 300);
+  });
 
+  window.abrirVLibras = function () {
+    var btn = document.querySelector('div[vw-access-button]');
+
+    if (!btn || !widgetPronto) {
+      // Ainda a carregar — avisa e tenta sozinho quando ficar pronto
+      var aviso = document.createElement('div');
+      aviso.textContent = '⏳ O tradutor de Libras ainda está a carregar. A abrir em breve…';
+      aviso.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c2840;color:#f0f6ff;padding:12px 20px;border-radius:12px;font-size:.85rem;z-index:9999;border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 32px rgba(0,0,0,.4)';
+      document.body.appendChild(aviso);
+
+      // Tenta abrir assim que ficar pronto (até 10 segundos)
+      var tentativas = 0;
+      var aguardar = setInterval(function () {
+        tentativas++;
+        var b = document.querySelector('div[vw-access-button]');
+        if (b && widgetPronto) {
+          clearInterval(aguardar);
+          document.body.removeChild(aviso);
+          dispararClique(b);
+        }
+        if (tentativas > 33) {
+          clearInterval(aguardar);
+          aviso.textContent = '❌ Não foi possível carregar o tradutor. Verifique a sua ligação.';
+          setTimeout(function () {
+            if (aviso.parentNode) document.body.removeChild(aviso);
+          }, 3000);
+        }
+      }, 300);
+      return;
+    }
+
+    dispararClique(btn);
+  };
+
+  function dispararClique(btn) {
+    btn.style.visibility    = 'visible';
+    btn.style.pointerEvents = 'auto';
+    btn.style.left          = '-9999px'; // fora do ecrã mas clicável
+    btn.click();
+    setTimeout(function () {
+      btn.style.visibility    = 'hidden';
+      btn.style.pointerEvents = 'none';
+    }, 150);
+  }
+})();
+</script>
 <script>
 /* ===== HEADER SCROLL ===== */
 const hdr = document.getElementById('hdr');
