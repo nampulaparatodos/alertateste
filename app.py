@@ -167,6 +167,14 @@ def fmt_datetime(d):
 
 
 # ═══════════════════════════════════════════════════════════════
+#  Health check (obrigatório para o Render)
+# ═══════════════════════════════════════════════════════════════
+@app.route('/health')
+def health():
+    return "OK", 200
+
+
+# ═══════════════════════════════════════════════════════════════
 #  Callback URL: https://alerta-nampula.onrender.com/ussd
 # ═══════════════════════════════════════════════════════════════
 
@@ -505,16 +513,21 @@ def api_ussd_voluntarios():
 
 @app.route('/')
 def index():
-    alertas  = query("SELECT * FROM alerta WHERE ativo=1 ORDER BY data DESC")
-    familias = query("SELECT * FROM familia ORDER BY data DESC")
-    zonas    = query("SELECT * FROM zona WHERE ativa=1")
-    total    = query("SELECT SUM(numero) s FROM familia", one=True)['s'] or 0
-    stats    = {'alertas': len(alertas), 'familias': total, 'zonas': len(zonas),
-                'subscricoes': query("SELECT COUNT(*) c FROM subscricao", one=True)['c']}
-    cfg = get_site_config()
-    return render_template('index.html', alertas=alertas, familias=familias,
-                           zonas=zonas, stats=stats, cfg=cfg,
-                           fmt_date=fmt_date, fmt_datetime=fmt_datetime)
+    try:
+        alertas  = query("SELECT * FROM alerta WHERE ativo=1 ORDER BY data DESC")
+        familias = query("SELECT * FROM familia ORDER BY data DESC")
+        zonas    = query("SELECT * FROM zona WHERE ativa=1")
+        total    = query("SELECT SUM(numero) s FROM familia", one=True)['s'] or 0
+        stats    = {'alertas': len(alertas), 'familias': total, 'zonas': len(zonas),
+                    'subscricoes': query("SELECT COUNT(*) c FROM subscricao", one=True)['c']}
+        cfg = get_site_config()
+        return render_template('index.html', alertas=alertas, familias=familias,
+                               zonas=zonas, stats=stats, cfg=cfg,
+                               fmt_date=fmt_date, fmt_datetime=fmt_datetime)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # Isto aparece nos logs do Render
+        return f"Erro interno no servidor: {e}", 500
 
 @app.route('/api/dados_publicos')
 def dados_publicos():
@@ -922,9 +935,15 @@ def ping():
 #  ARRANQUE CORRECTO PARA RENDER
 # ═══════════════════════════════════════════════════════════════
 
-# Inicializa a base de dados (executado apenas uma vez)
+# Inicializa a base de dados com logging
 with app.app_context():
-    init_db()
+    try:
+        init_db()
+        print("✅ Base de dados inicializada com sucesso.")
+    except Exception as e:
+        print("❌ ERRO ao inicializar a base de dados:", e)
+        import traceback
+        traceback.print_exc()
 
 # ✅ EXPORTA a aplicação para o Gunicorn (Render)
 application = app
@@ -933,4 +952,3 @@ application = app
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
-
