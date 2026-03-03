@@ -1439,100 +1439,58 @@ div[vw-access-button] {
 (function () {
   var widgetPronto = false;
 
+  // Inicializa e marca como pronto quando terminar
   window.addEventListener('load', function () {
     try {
       new window.VLibras.Widget('https://vlibras.gov.br/app');
     } catch (e) {}
 
+    // Aguarda o botão aparecer no DOM para confirmar que está pronto
     var tentativas = 0;
     var esperar = setInterval(function () {
       var btn = document.querySelector('div[vw-access-button]');
       tentativas++;
       if (btn) {
         widgetPronto = true;
-        esconderBtn(btn);
+        // Esconder o botão original
+        btn.style.position     = 'fixed';
+        btn.style.left         = '-9999px';
+        btn.style.top          = '-9999px';
+        btn.style.visibility   = 'hidden';
+        btn.style.pointerEvents = 'none';
         clearInterval(esperar);
-
-        // Injeta texto limpo numa div oculta para o VLibras traduzir
-        injetarTextoLimpo();
       }
+      // Desiste após 15 segundos
       if (tentativas > 50) clearInterval(esperar);
     }, 300);
   });
 
-  /* ── Recolhe apenas texto visível e relevante da página ── */
-  function injetarTextoLimpo() {
-    var seccoes = document.querySelectorAll(
-      '.hero h1, .hero-desc, .alert-title, .alert-text, ' +
-      '.comp-title, .comp-desc, .fam-row h4, .fam-row p, ' +
-      '.zona-name, .zona-res, .nf-text h4, .nf-text p, ' +
-      '.sec-title, .sec-desc, .notif-card-title, .notif-card-sub'
-    );
-
-    var frases = [];
-    seccoes.forEach(function (el) {
-      var txt = (el.innerText || el.textContent || '').trim();
-      // Remove linhas em branco e fragmentos muito curtos
-      txt = txt.replace(/\s+/g, ' ').trim();
-      if (txt.length > 4) frases.push(txt);
-    });
-
-    // Remove duplicados
-    frases = frases.filter(function (v, i, a) { return a.indexOf(v) === i; });
-
-    var textoFinal = frases.join('. ');
-
-    // Cria div oculta que o VLibras vai ler
-    var div = document.getElementById('vlibras-texto');
-    if (!div) {
-      div = document.createElement('div');
-      div.id = 'vlibras-texto';
-      // Visível para o VLibras mas invisível para o utilizador
-      div.style.cssText =
-        'position:absolute;left:-9999px;top:-9999px;' +
-        'width:1px;height:1px;overflow:hidden;' +
-        'font-size:1px;color:transparent;pointer-events:none';
-      document.body.appendChild(div);
-    }
-    div.textContent = textoFinal;
-
-    // Aponta o VLibras para esta div
-    try {
-      if (window.vlibras && window.vlibras.setContent) {
-        window.vlibras.setContent(textoFinal);
-      }
-    } catch (e) {}
-  }
-
-  /* ── Esconde o botão flutuante original ── */
-  function esconderBtn(btn) {
-    btn.style.position      = 'fixed';
-    btn.style.left          = '-9999px';
-    btn.style.top           = '-9999px';
-    btn.style.visibility    = 'hidden';
-    btn.style.pointerEvents = 'none';
-  }
-
-  /* ── Botão de acessibilidade chama esta função ── */
   window.abrirVLibras = function () {
     var btn = document.querySelector('div[vw-access-button]');
 
     if (!btn || !widgetPronto) {
-      mostrarToast('⏳ O tradutor ainda está a carregar. A abrir em breve…', false);
+      // Ainda a carregar — avisa e tenta sozinho quando ficar pronto
+      var aviso = document.createElement('div');
+      aviso.textContent = '⏳ O tradutor de Libras ainda está a carregar. A abrir em breve…';
+      aviso.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c2840;color:#f0f6ff;padding:12px 20px;border-radius:12px;font-size:.85rem;z-index:9999;border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 32px rgba(0,0,0,.4)';
+      document.body.appendChild(aviso);
 
-      var t = 0;
+      // Tenta abrir assim que ficar pronto (até 10 segundos)
+      var tentativas = 0;
       var aguardar = setInterval(function () {
-        t++;
+        tentativas++;
         var b = document.querySelector('div[vw-access-button]');
         if (b && widgetPronto) {
           clearInterval(aguardar);
-          esconderToast();
+          document.body.removeChild(aviso);
           dispararClique(b);
         }
-        if (t > 33) {
+        if (tentativas > 33) {
           clearInterval(aguardar);
-          mostrarToast('❌ Não foi possível carregar o tradutor.', true);
-          setTimeout(esconderToast, 3000);
+          aviso.textContent = '❌ Não foi possível carregar o tradutor. Verifique a sua ligação.';
+          setTimeout(function () {
+            if (aviso.parentNode) document.body.removeChild(aviso);
+          }, 3000);
         }
       }, 300);
       return;
@@ -1541,42 +1499,18 @@ div[vw-access-button] {
     dispararClique(btn);
   };
 
-  /* ── Dispara clique no botão oculto ── */
   function dispararClique(btn) {
     btn.style.visibility    = 'visible';
     btn.style.pointerEvents = 'auto';
-    btn.style.left          = '-9999px';
+    btn.style.left          = '-9999px'; // fora do ecrã mas clicável
     btn.click();
     setTimeout(function () {
       btn.style.visibility    = 'hidden';
       btn.style.pointerEvents = 'none';
     }, 150);
   }
-
-  /* ── Toast de aviso ── */
-  var toastEl = null;
-  function mostrarToast(msg, erro) {
-    esconderToast();
-    toastEl = document.createElement('div');
-    toastEl.textContent = msg;
-    toastEl.style.cssText =
-      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);' +
-      'background:' + (erro ? '#2a0a0a' : '#1c2840') + ';' +
-      'color:#f0f6ff;padding:12px 20px;border-radius:12px;' +
-      'font-size:.85rem;z-index:9999;' +
-      'border:1px solid ' + (erro ? 'rgba(230,57,70,.3)' : 'rgba(255,255,255,.12)') + ';' +
-      'box-shadow:0 8px 32px rgba(0,0,0,.4);white-space:nowrap';
-    document.body.appendChild(toastEl);
-  }
-  function esconderToast() {
-    if (toastEl && toastEl.parentNode) {
-      document.body.removeChild(toastEl);
-      toastEl = null;
-    }
-  }
 })();
 </script>
-<script>
 /* ===== HEADER SCROLL ===== */
 const hdr = document.getElementById('hdr');
 const btt = document.getElementById('btt');
