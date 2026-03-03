@@ -893,8 +893,8 @@ body.light-mode .hc-num { color: var(--t1); }
     <button class="mob-acc-btn" id="mob-audio" onclick="toggleAudio()"><i class="fas fa-volume-up"></i> Ler Página</button>
     <button class="mob-acc-btn" id="mob-font" onclick="toggleFont()"><i class="fas fa-text-height"></i> Aumentar Fonte</button>
     <button class="mob-acc-btn" id="mob-dys" onclick="toggleDys()"><i class="fas fa-font"></i> Fonte Dislexia</button>
-    <!-- NOVO BOTÃO VLIBRAS -->
-    <button class="mob-acc-btn" id="mob-vlibras" onclick="openVLibras()"><i class="fas fa-hands"></i> Tradutor Libras</button>
+    <!-- NOVO BOTÃO VLIBRAS (abre com abrirVLibras) -->
+    <button class="mob-acc-btn" id="mob-vlibras" onclick="abrirVLibras()"><i class="fas fa-hands"></i> Tradutor Libras</button>
   </div>
 </div>
 
@@ -934,8 +934,8 @@ body.light-mode .hc-num { color: var(--t1); }
           <button class="acc-item" id="acc-audio" onclick="toggleAudio()" role="menuitem"><i class="fas fa-volume-up"></i> Ler Página</button>
           <button class="acc-item" id="acc-font" onclick="toggleFont()" role="menuitem"><i class="fas fa-text-height"></i> Aumentar Fonte</button>
           <button class="acc-item" id="acc-dys" onclick="toggleDys()" role="menuitem"><i class="fas fa-font"></i> Fonte Dislexia</button>
-          <!-- NOVO BOTÃO VLIBRAS -->
-          <button class="acc-item" id="acc-vlibras" onclick="openVLibras()" role="menuitem"><i class="fas fa-hands"></i> Tradutor Libras</button>
+          <!-- NOVO BOTÃO VLIBRAS (abre com abrirVLibras) -->
+          <button class="acc-item" id="acc-vlibras" onclick="abrirVLibras()" role="menuitem"><i class="fas fa-hands"></i> Tradutor Libras</button>
         </div>
       </div>
     </nav>
@@ -1416,36 +1416,70 @@ body.light-mode .hc-num { color: var(--t1); }
 </footer>
 
 <button class="btt" id="btt" aria-label="Voltar ao topo"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
-<!-- VLibras para tradução em Libras -->
-<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+
+<!-- VLibras - Tradutor para Libras (versão com botão flutuante escondido) -->
+<link rel="stylesheet" href="https://vlibras.gov.br/app/vlibras.css">
+<script src="https://vlibras.gov.br/app/vlibras.js"></script>
 <script>
-  let vlibrasInstance = null;
-
-  // Desativa os botões inicialmente
-  document.addEventListener('DOMContentLoaded', function() {
-    const btnAcc = document.getElementById('acc-vlibras');
-    const btnMob = document.getElementById('mob-vlibras');
-    if (btnAcc) btnAcc.disabled = true;
-    if (btnMob) btnMob.disabled = true;
-  });
-
+  // Aguarda o carregamento completo do VLibras
   window.addEventListener('load', function() {
-    vlibrasInstance = new window.VLibras.Widget('https://vlibras.gov.br/app');
-    // Habilita os botões
-    const btnAcc = document.getElementById('acc-vlibras');
-    const btnMob = document.getElementById('mob-vlibras');
-    if (btnAcc) btnAcc.disabled = false;
-    if (btnMob) btnMob.disabled = false;
-  });
-
-  function openVLibras() {
-    if (vlibrasInstance && typeof vlibrasInstance.show === 'function') {
-      vlibrasInstance.show();
-    } else {
-      alert('O tradutor ainda está a carregar. Por favor, aguarde e tente novamente.');
+    // Cria a div vw se ainda não existir (o script já deve ter criado, mas garantimos)
+    if (!document.querySelector('div[vw]')) {
+      const vw = document.createElement('div');
+      vw.setAttribute('vw', '');
+      vw.setAttribute('class', 'enabled');
+      const accessButton = document.createElement('div');
+      accessButton.setAttribute('vw-access-button', '');
+      accessButton.classList.add('active');
+      const pluginWrapper = document.createElement('div');
+      pluginWrapper.setAttribute('vw-plugin-wrapper', '');
+      const topBar = document.createElement('div');
+      topBar.setAttribute('vw-topbar', '');
+      const topBarWrapper = document.createElement('div');
+      topBarWrapper.setAttribute('vw-topbar-wrapper', '');
+      const logo = document.createElement('div');
+      logo.setAttribute('vw-logo', '');
+      logo.innerHTML = '<span>VLibras</span>';
+      const topBarActions = document.createElement('div');
+      topBarActions.setAttribute('vw-topbar-actions', '');
+      const actionButtons = document.createElement('div');
+      actionButtons.setAttribute('vw-action-buttons', '');
+      topBarActions.appendChild(actionButtons);
+      topBarWrapper.appendChild(logo);
+      topBarWrapper.appendChild(topBarActions);
+      topBar.appendChild(topBarWrapper);
+      const content = document.createElement('div');
+      content.setAttribute('vw-content', '');
+      const textPanel = document.createElement('div');
+      textPanel.setAttribute('vw-text-panel', '');
+      content.appendChild(textPanel);
+      pluginWrapper.appendChild(topBar);
+      pluginWrapper.appendChild(content);
+      vw.appendChild(accessButton);
+      vw.appendChild(pluginWrapper);
+      document.body.appendChild(vw);
     }
-  }
-</script></script>
+
+    // Pequeno CSS para esconder o botão flutuante original
+    const style = document.createElement('style');
+    style.innerHTML = `
+      div[vw] div[vw-access-button] {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Disponibiliza a função para abrir o widget pelo nosso botão
+    window.abrirVLibras = function() {
+      const accessButton = document.querySelector('div[vw-access-button]');
+      if (accessButton) {
+        accessButton.click();  // Simula clique no botão flutuante escondido
+      } else {
+        alert('O tradutor VLibras ainda não carregou completamente. Tente novamente em instantes.');
+      }
+    };
+  });
+</script>
 
 <script>
 /* ===== HEADER SCROLL ===== */
