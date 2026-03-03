@@ -1425,7 +1425,7 @@ div[vw-access-button] {
 
 <button class="btt" id="btt" aria-label="Voltar ao topo"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
 
-<!-- VLibras -->
+<!-- VLibras - Tradutor para Língua Gestual -->
 <div vw class="enabled">
   <div vw-access-button class="active"></div>
   <div vw-plugin-wrapper>
@@ -1435,77 +1435,41 @@ div[vw-access-button] {
 <link rel="stylesheet" href="https://vlibras.gov.br/app/vlibras-plugin.css">
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-(function () {
-  var pronto = false;
+  (function () {
+    // Inicializa o widget correctamente
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
 
-  window.addEventListener('load', function () {
-    try { new window.VLibras.Widget('https://vlibras.gov.br/app'); } catch(e){}
-
-    // Espera o widget criar o botão no DOM
-    var t = setInterval(function () {
-      var btn = document.querySelector('[vw-access-button]');
-      if (!btn) return;
-      pronto = true;
-      clearInterval(t);
-
-      // Move o botão para fora do ecrã SEM usar display:none nem visibility:hidden
-      // (ambos impedem o .click() programático no Chrome/Firefox)
-      btn.style.cssText +=
-        ';position:fixed!important' +
-        ';left:-9999px!important' +
-        ';top:0!important' +
-        ';opacity:0!important' +
-        ';pointer-events:none!important' +
-        ';z-index:-1!important';
-    }, 200);
-  });
-
-  window.abrirVLibras = function () {
-    var btn = document.querySelector('[vw-access-button]');
-
-    if (!pronto || !btn) {
-      // Ainda a carregar — mostra aviso e reabre sozinho
-      var toast = criarToast('⏳ A carregar o tradutor…');
-      var tries = 0;
-      var wait = setInterval(function () {
-        tries++;
-        var b = document.querySelector('[vw-access-button]');
-        if (pronto && b) {
-          clearInterval(wait);
-          removerToast(toast);
-          clicar(b);
-        }
-        if (tries > 40) {
-          clearInterval(wait);
-          toast.textContent = '❌ Falhou ao carregar. Verifique a ligação.';
-          setTimeout(function(){ removerToast(toast); }, 3000);
-        }
-      }, 250);
-      return;
+    // Esconde o botão flutuante após render (sem display:none para manter clicável)
+    function hideBtn() {
+      var btn = document.querySelector('div[vw-access-button]');
+      if (!btn) { setTimeout(hideBtn, 300); return; }
+      btn.style.position  = 'fixed';
+      btn.style.left      = '-9999px';
+      btn.style.top       = '-9999px';
+      btn.style.visibility = 'hidden';
+      btn.style.pointerEvents = 'none';
     }
+    window.addEventListener('load', hideBtn);
 
-    clicar(btn);
-  };
-
- function clicar(btn) {
-    btn.click();
-  }
-  function criarToast(msg) {
-    var d = document.createElement('div');
-    d.textContent = msg;
-    d.style.cssText =
-      'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);' +
-      'background:#1c2840;color:#f0f6ff;padding:11px 22px;border-radius:12px;' +
-      'font-size:.84rem;z-index:10000;border:1px solid rgba(255,255,255,.12);' +
-      'box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;' +
-      'font-family:Sora,sans-serif';
-    document.body.appendChild(d);
-    return d;
-  }
-  function removerToast(d) {
-    if (d && d.parentNode) d.parentNode.removeChild(d);
-  }
-})();
+    // Função chamada pelos nossos botões de acessibilidade
+    window.abrirVLibras = function () {
+      var btn = document.querySelector('div[vw-access-button]');
+      if (!btn) {
+        alert('O tradutor ainda está a carregar. Aguarde um momento e tente novamente.');
+        return;
+      }
+      // Torna temporariamente clicável, clica, e volta a esconder
+      btn.style.visibility   = 'visible';
+      btn.style.pointerEvents = 'auto';
+      btn.style.left = '-9999px'; // continua fora do ecrã visual
+      btn.click();
+      // Volta a desactivar pointer events após o clique
+      setTimeout(function () {
+        btn.style.visibility    = 'hidden';
+        btn.style.pointerEvents = 'none';
+      }, 100);
+    };
+  })();
 </script>
 <script>
 /* ===== HEADER SCROLL ===== */
