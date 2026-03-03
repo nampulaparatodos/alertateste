@@ -870,13 +870,12 @@ body.light-mode .hc-num { color: var(--t1); }
   .logo-name { font-size: .9rem; }
   .hdr-actions .btn-primary { display: none; }
 }
-/* ===== VLIBRAS: botão flutuante movido para fora do ecrã ===== */
+/* ===== VLIBRAS: botão fora do ecrã mas clicável ===== */
 div[vw-access-button] {
   position: fixed !important;
   left: -9999px !important;
-  top: -9999px !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
+  top: 0 !important;
+  opacity: 0 !important;
   z-index: -1 !important;
 }
 </style>
@@ -1488,15 +1487,9 @@ div[vw-access-button] {
     clicar(btn);
   };
 
-  function clicar(btn) {
-    // Reactiva pointer-events só durante o clique
-    btn.style.pointerEvents = 'auto';
+ function clicar(btn) {
     btn.click();
-    setTimeout(function () {
-      btn.style.pointerEvents = 'none';
-    }, 100);
   }
-
   function criarToast(msg) {
     var d = document.createElement('div');
     d.textContent = msg;
