@@ -893,6 +893,8 @@ body.light-mode .hc-num { color: var(--t1); }
     <button class="mob-acc-btn" id="mob-audio" onclick="toggleAudio()"><i class="fas fa-volume-up"></i> Ler Página</button>
     <button class="mob-acc-btn" id="mob-font" onclick="toggleFont()"><i class="fas fa-text-height"></i> Aumentar Fonte</button>
     <button class="mob-acc-btn" id="mob-dys" onclick="toggleDys()"><i class="fas fa-font"></i> Fonte Dislexia</button>
+    <!-- NOVO BOTÃO VLIBRAS -->
+    <button class="mob-acc-btn" id="mob-vlibras" onclick="openVLibras()"><i class="fas fa-hands"></i> Tradutor Libras</button>
   </div>
 </div>
 
@@ -932,6 +934,8 @@ body.light-mode .hc-num { color: var(--t1); }
           <button class="acc-item" id="acc-audio" onclick="toggleAudio()" role="menuitem"><i class="fas fa-volume-up"></i> Ler Página</button>
           <button class="acc-item" id="acc-font" onclick="toggleFont()" role="menuitem"><i class="fas fa-text-height"></i> Aumentar Fonte</button>
           <button class="acc-item" id="acc-dys" onclick="toggleDys()" role="menuitem"><i class="fas fa-font"></i> Fonte Dislexia</button>
+          <!-- NOVO BOTÃO VLIBRAS -->
+          <button class="acc-item" id="acc-vlibras" onclick="openVLibras()" role="menuitem"><i class="fas fa-hands"></i> Tradutor Libras</button>
         </div>
       </div>
     </nav>
@@ -1412,6 +1416,20 @@ body.light-mode .hc-num { color: var(--t1); }
 </footer>
 
 <button class="btt" id="btt" aria-label="Voltar ao topo"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
+
+<!-- VLibras para tradução em Libras -->
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+  // Inicializa o widget (sem botão flutuante padrão)
+  new window.VLibras.Widget('https://vlibras.gov.br/app');
+  function openVLibras() {
+    if (window.VLibras && window.VLibras.Widget) {
+      window.VLibras.Widget.show();
+    } else {
+      alert('A carregar o tradutor VLibras... Tente novamente.');
+    }
+  }
+</script>
 
 <script>
 /* ===== HEADER SCROLL ===== */
