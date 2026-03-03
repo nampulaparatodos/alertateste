@@ -870,10 +870,14 @@ body.light-mode .hc-num { color: var(--t1); }
   .logo-name { font-size: .9rem; }
   .hdr-actions .btn-primary { display: none; }
 }
-
-/* ===== NOVA REGRA: Esconde o botão flutuante do VLibras permanentemente ===== */
+/* ===== VLIBRAS: botão flutuante movido para fora do ecrã ===== */
 div[vw-access-button] {
-  display: none !important;
+  position: fixed !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
 }
 </style>
 </head>
@@ -1422,36 +1426,49 @@ div[vw-access-button] {
 
 <button class="btt" id="btt" aria-label="Voltar ao topo"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
 
-<!-- VLibras - Tradutor para Libras -->
-<link rel="stylesheet" href="https://vlibras.gov.br/app/vlibras.css">
-<script src="https://vlibras.gov.br/app/vlibras.js"></script>
+<!-- VLibras - Tradutor para Língua Gestual -->
+<div vw class="enabled">
+  <div vw-access-button class="active"></div>
+  <div vw-plugin-wrapper>
+    <div class="vw-plugin-top-wrapper"></div>
+  </div>
+</div>
+<link rel="stylesheet" href="https://vlibras.gov.br/app/vlibras-plugin.css">
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-  (function() {
-    // Esconde o botão flutuante assim que ele for criado
-    function hideFloatingButton() {
+  (function () {
+    // Inicializa o widget correctamente
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+
+    // Esconde o botão flutuante após render (sem display:none para manter clicável)
+    function hideBtn() {
       var btn = document.querySelector('div[vw-access-button]');
-      if (btn) {
-        btn.style.display = 'none';
-      } else {
-        // Tenta novamente até encontrar
-        setTimeout(hideFloatingButton, 200);
-      }
+      if (!btn) { setTimeout(hideBtn, 300); return; }
+      btn.style.position  = 'fixed';
+      btn.style.left      = '-9999px';
+      btn.style.top       = '-9999px';
+      btn.style.visibility = 'hidden';
+      btn.style.pointerEvents = 'none';
     }
-    window.addEventListener('load', hideFloatingButton);
+    window.addEventListener('load', hideBtn);
 
     // Função chamada pelos nossos botões de acessibilidade
-    window.abrirVLibras = function() {
+    window.abrirVLibras = function () {
       var btn = document.querySelector('div[vw-access-button]');
-      if (btn) {
-        btn.click();  // Simula clique no botão escondido
-      } else {
-        alert('A carregar o tradutor... Por favor, aguarde e tente novamente.');
-        // Tenta novamente após 1 segundo (caso o elemento demore)
-        setTimeout(function() {
-          var btn2 = document.querySelector('div[vw-access-button]');
-          if (btn2) btn2.click();
-        }, 1000);
+      if (!btn) {
+        alert('O tradutor ainda está a carregar. Aguarde um momento e tente novamente.');
+        return;
       }
+      // Torna temporariamente clicável, clica, e volta a esconder
+      btn.style.visibility   = 'visible';
+      btn.style.pointerEvents = 'auto';
+      btn.style.left = '-9999px'; // continua fora do ecrã visual
+      btn.click();
+      // Volta a desactivar pointer events após o clique
+      setTimeout(function () {
+        btn.style.visibility    = 'hidden';
+        btn.style.pointerEvents = 'none';
+      }, 100);
     };
   })();
 </script>
