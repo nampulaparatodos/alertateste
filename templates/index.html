@@ -1426,7 +1426,7 @@ div[vw-access-button] {
 
 <button class="btt" id="btt" aria-label="Voltar ao topo"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
 
-<!-- VLibras - Tradutor para Língua Gestual -->
+<!-- VLibras -->
 <div vw class="enabled">
   <div vw-access-button class="active"></div>
   <div vw-plugin-wrapper>
@@ -1437,77 +1437,80 @@ div[vw-access-button] {
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
 (function () {
-  var widgetPronto = false;
+  var pronto = false;
 
-  // Inicializa e marca como pronto quando terminar
   window.addEventListener('load', function () {
-    try {
-      new window.VLibras.Widget('https://vlibras.gov.br/app');
-    } catch (e) {}
+    try { new window.VLibras.Widget('https://vlibras.gov.br/app'); } catch(e){}
 
-    // Aguarda o botão aparecer no DOM para confirmar que está pronto
-    var tentativas = 0;
-    var esperar = setInterval(function () {
-      var btn = document.querySelector('div[vw-access-button]');
-      tentativas++;
-      if (btn) {
-        widgetPronto = true;
-        // Esconder o botão original
-        btn.style.position     = 'fixed';
-        btn.style.left         = '-9999px';
-        btn.style.top          = '-9999px';
-        btn.style.visibility   = 'hidden';
-        btn.style.pointerEvents = 'none';
-        clearInterval(esperar);
-      }
-      // Desiste após 15 segundos
-      if (tentativas > 50) clearInterval(esperar);
-    }, 300);
+    // Espera o widget criar o botão no DOM
+    var t = setInterval(function () {
+      var btn = document.querySelector('[vw-access-button]');
+      if (!btn) return;
+      pronto = true;
+      clearInterval(t);
+
+      // Move o botão para fora do ecrã SEM usar display:none nem visibility:hidden
+      // (ambos impedem o .click() programático no Chrome/Firefox)
+      btn.style.cssText +=
+        ';position:fixed!important' +
+        ';left:-9999px!important' +
+        ';top:0!important' +
+        ';opacity:0!important' +
+        ';pointer-events:none!important' +
+        ';z-index:-1!important';
+    }, 200);
   });
 
   window.abrirVLibras = function () {
-    var btn = document.querySelector('div[vw-access-button]');
+    var btn = document.querySelector('[vw-access-button]');
 
-    if (!btn || !widgetPronto) {
-      // Ainda a carregar — avisa e tenta sozinho quando ficar pronto
-      var aviso = document.createElement('div');
-      aviso.textContent = '⏳ O tradutor de Libras ainda está a carregar. A abrir em breve…';
-      aviso.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c2840;color:#f0f6ff;padding:12px 20px;border-radius:12px;font-size:.85rem;z-index:9999;border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 32px rgba(0,0,0,.4)';
-      document.body.appendChild(aviso);
-
-      // Tenta abrir assim que ficar pronto (até 10 segundos)
-      var tentativas = 0;
-      var aguardar = setInterval(function () {
-        tentativas++;
-        var b = document.querySelector('div[vw-access-button]');
-        if (b && widgetPronto) {
-          clearInterval(aguardar);
-          document.body.removeChild(aviso);
-          dispararClique(b);
+    if (!pronto || !btn) {
+      // Ainda a carregar — mostra aviso e reabre sozinho
+      var toast = criarToast('⏳ A carregar o tradutor…');
+      var tries = 0;
+      var wait = setInterval(function () {
+        tries++;
+        var b = document.querySelector('[vw-access-button]');
+        if (pronto && b) {
+          clearInterval(wait);
+          removerToast(toast);
+          clicar(b);
         }
-        if (tentativas > 33) {
-          clearInterval(aguardar);
-          aviso.textContent = '❌ Não foi possível carregar o tradutor. Verifique a sua ligação.';
-          setTimeout(function () {
-            if (aviso.parentNode) document.body.removeChild(aviso);
-          }, 3000);
+        if (tries > 40) {
+          clearInterval(wait);
+          toast.textContent = '❌ Falhou ao carregar. Verifique a ligação.';
+          setTimeout(function(){ removerToast(toast); }, 3000);
         }
-      }, 300);
+      }, 250);
       return;
     }
 
-    dispararClique(btn);
+    clicar(btn);
   };
 
-  function dispararClique(btn) {
-    btn.style.visibility    = 'visible';
+  function clicar(btn) {
+    // Reactiva pointer-events só durante o clique
     btn.style.pointerEvents = 'auto';
-    btn.style.left          = '-9999px'; // fora do ecrã mas clicável
     btn.click();
     setTimeout(function () {
-      btn.style.visibility    = 'hidden';
       btn.style.pointerEvents = 'none';
-    }, 150);
+    }, 100);
+  }
+
+  function criarToast(msg) {
+    var d = document.createElement('div');
+    d.textContent = msg;
+    d.style.cssText =
+      'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);' +
+      'background:#1c2840;color:#f0f6ff;padding:11px 22px;border-radius:12px;' +
+      'font-size:.84rem;z-index:10000;border:1px solid rgba(255,255,255,.12);' +
+      'box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;' +
+      'font-family:Sora,sans-serif';
+    document.body.appendChild(d);
+    return d;
+  }
+  function removerToast(d) {
+    if (d && d.parentNode) d.parentNode.removeChild(d);
   }
 })();
 </script>
