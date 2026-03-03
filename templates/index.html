@@ -1416,26 +1416,36 @@ body.light-mode .hc-num { color: var(--t1); }
 </footer>
 
 <button class="btt" id="btt" aria-label="Voltar ao topo"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
-
 <!-- VLibras para tradução em Libras -->
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
   let vlibrasInstance = null;
 
-  // Inicializa o widget após o carregamento completo da página
+  // Desativa os botões inicialmente
+  document.addEventListener('DOMContentLoaded', function() {
+    const btnAcc = document.getElementById('acc-vlibras');
+    const btnMob = document.getElementById('mob-vlibras');
+    if (btnAcc) btnAcc.disabled = true;
+    if (btnMob) btnMob.disabled = true;
+  });
+
   window.addEventListener('load', function() {
     vlibrasInstance = new window.VLibras.Widget('https://vlibras.gov.br/app');
+    // Habilita os botões
+    const btnAcc = document.getElementById('acc-vlibras');
+    const btnMob = document.getElementById('mob-vlibras');
+    if (btnAcc) btnAcc.disabled = false;
+    if (btnMob) btnMob.disabled = false;
   });
 
   function openVLibras() {
     if (vlibrasInstance && typeof vlibrasInstance.show === 'function') {
-      vlibrasInstance.show();  // Abre o tradutor
+      vlibrasInstance.show();
     } else {
-      alert('A carregar o tradutor VLibras... Tente novamente em instantes.');
+      alert('O tradutor ainda está a carregar. Por favor, aguarde e tente novamente.');
     }
   }
-</script>
-</script>
+</script></script>
 
 <script>
 /* ===== HEADER SCROLL ===== */
