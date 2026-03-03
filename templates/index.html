@@ -870,6 +870,11 @@ body.light-mode .hc-num { color: var(--t1); }
   .logo-name { font-size: .9rem; }
   .hdr-actions .btn-primary { display: none; }
 }
+
+/* ===== NOVA REGRA: Esconde o botão flutuante do VLibras permanentemente ===== */
+div[vw-access-button] {
+  display: none !important;
+}
 </style>
 </head>
 <body>
@@ -1417,68 +1422,38 @@ body.light-mode .hc-num { color: var(--t1); }
 
 <button class="btt" id="btt" aria-label="Voltar ao topo"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
 
-<!-- VLibras - Tradutor para Libras (versão com botão flutuante escondido) -->
+<!-- VLibras - Tradutor para Libras -->
 <link rel="stylesheet" href="https://vlibras.gov.br/app/vlibras.css">
 <script src="https://vlibras.gov.br/app/vlibras.js"></script>
 <script>
-  // Aguarda o carregamento completo do VLibras
-  window.addEventListener('load', function() {
-    // Cria a div vw se ainda não existir (o script já deve ter criado, mas garantimos)
-    if (!document.querySelector('div[vw]')) {
-      const vw = document.createElement('div');
-      vw.setAttribute('vw', '');
-      vw.setAttribute('class', 'enabled');
-      const accessButton = document.createElement('div');
-      accessButton.setAttribute('vw-access-button', '');
-      accessButton.classList.add('active');
-      const pluginWrapper = document.createElement('div');
-      pluginWrapper.setAttribute('vw-plugin-wrapper', '');
-      const topBar = document.createElement('div');
-      topBar.setAttribute('vw-topbar', '');
-      const topBarWrapper = document.createElement('div');
-      topBarWrapper.setAttribute('vw-topbar-wrapper', '');
-      const logo = document.createElement('div');
-      logo.setAttribute('vw-logo', '');
-      logo.innerHTML = '<span>VLibras</span>';
-      const topBarActions = document.createElement('div');
-      topBarActions.setAttribute('vw-topbar-actions', '');
-      const actionButtons = document.createElement('div');
-      actionButtons.setAttribute('vw-action-buttons', '');
-      topBarActions.appendChild(actionButtons);
-      topBarWrapper.appendChild(logo);
-      topBarWrapper.appendChild(topBarActions);
-      topBar.appendChild(topBarWrapper);
-      const content = document.createElement('div');
-      content.setAttribute('vw-content', '');
-      const textPanel = document.createElement('div');
-      textPanel.setAttribute('vw-text-panel', '');
-      content.appendChild(textPanel);
-      pluginWrapper.appendChild(topBar);
-      pluginWrapper.appendChild(content);
-      vw.appendChild(accessButton);
-      vw.appendChild(pluginWrapper);
-      document.body.appendChild(vw);
-    }
-
-    // Pequeno CSS para esconder o botão flutuante original
-    const style = document.createElement('style');
-    style.innerHTML = `
-      div[vw] div[vw-access-button] {
-        display: none !important;
-      }
-    `;
-    document.head.appendChild(style);
-
-    // Disponibiliza a função para abrir o widget pelo nosso botão
-    window.abrirVLibras = function() {
-      const accessButton = document.querySelector('div[vw-access-button]');
-      if (accessButton) {
-        accessButton.click();  // Simula clique no botão flutuante escondido
+  (function() {
+    // Esconde o botão flutuante assim que ele for criado
+    function hideFloatingButton() {
+      var btn = document.querySelector('div[vw-access-button]');
+      if (btn) {
+        btn.style.display = 'none';
       } else {
-        alert('O tradutor VLibras ainda não carregou completamente. Tente novamente em instantes.');
+        // Tenta novamente até encontrar
+        setTimeout(hideFloatingButton, 200);
+      }
+    }
+    window.addEventListener('load', hideFloatingButton);
+
+    // Função chamada pelos nossos botões de acessibilidade
+    window.abrirVLibras = function() {
+      var btn = document.querySelector('div[vw-access-button]');
+      if (btn) {
+        btn.click();  // Simula clique no botão escondido
+      } else {
+        alert('A carregar o tradutor... Por favor, aguarde e tente novamente.');
+        // Tenta novamente após 1 segundo (caso o elemento demore)
+        setTimeout(function() {
+          var btn2 = document.querySelector('div[vw-access-button]');
+          if (btn2) btn2.click();
+        }, 1000);
       }
     };
-  });
+  })();
 </script>
 
 <script>
